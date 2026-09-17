@@ -16,7 +16,7 @@ logging.basicConfig(
 logger = logging.getLogger("telemetry_api")
 
 
-router = APIRouter()
+router = APIRouter(prefix="/devices", tags=["Device Management Cluster"])
 
 # @router.post("/devices")
 # def create_event(event: dict, db: Session = Depends(get_db)):
@@ -27,7 +27,7 @@ router = APIRouter()
 #     return db_event
 
 
-@router.get("/devices", response_model=List[DeviceResponse])
+@router.get("/", response_model=List[DeviceResponse])
 async def get_devices(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     # Construct the query with pagination
     query = select(Device).offset(skip).limit(limit)
@@ -40,7 +40,7 @@ async def get_devices(skip: int = 0, limit: int = 100, db: Session = Depends(get
     
     return devices
 
-@router.get("/devices/{requested_id}")
+@router.get("/{requested_id}")
 async def get_specific_device(requested_id: int, db: Session = Depends(get_db)):
     # Construct the query with pagination
     query = select(Device).where(requested_id == Device.id)
@@ -54,7 +54,7 @@ async def get_specific_device(requested_id: int, db: Session = Depends(get_db)):
     return device
 
 
-@router.post("/devices", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 def add_device(device: dict, db: Session = Depends(get_db)):
     # device_dict = device.model_dump()
 
