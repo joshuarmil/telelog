@@ -29,16 +29,17 @@ router = APIRouter(prefix="/devices", tags=["Device Management Cluster"])
 
 @router.get("/", response_model=List[DeviceResponse])
 async def get_devices(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    # Clamp query
+    limit = 100 if limit > 100 or limit < 1 else limit
+    
     # Construct the query with pagination
     query = select(Device).offset(skip).limit(limit)
     
     # Execute query
     result = db.execute(query)
     
-    # Fetch all records
-    devices = result.scalars().all()
-    
-    return devices
+    # Return all fetched records
+    return result.scalars().all()
 
 @router.get("/{requested_id}")
 async def get_specific_device(requested_id: int, db: Session = Depends(get_db)):
