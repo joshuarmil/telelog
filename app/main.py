@@ -1,8 +1,7 @@
-from fastapi import FastAPI, status, Depends
+from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from app.db.base import Base, engine
-from pydantic import BaseModel
-
+from app.db.base import Base
+from app.db.session import engine
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

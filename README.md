@@ -46,9 +46,19 @@ Ensure you have Docker and Docker Compose installed locally:
 # Clone the repository
 git clone https://github.com/joshuarmil/telelog.git
 cd telelog
+```
 
+# Create a `.env` configuration file in the project root directory:
+```ini
+POSTGRES_USER=user
+POSTGRES_PASSWORD=pass
+POSTGRES_DB=telemetry
+DATABASE_URL=postgresql://user:pass@db:5432/telemetry
+```
+
+```bash
 # Spin up the containers (FastAPI, Elasticsearch, Redis)
-docker-compose up --build
+docker-compose up --build -d
 
 # Start the API server
 uvicorn app.main:app --reload
