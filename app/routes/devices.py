@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 # from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -19,15 +19,6 @@ logger = logging.getLogger("telemetry_api")
 
 router = APIRouter(prefix="/devices", tags=["Device Management Cluster"])
 
-# @router.post("/devices")
-# def create_event(event: dict, db: Session = Depends(get_db)):
-#     db_event = Event(**event)
-#     db.add(db_event)
-#     db.commit()
-#     db.refresh(db_event)
-#     return db_event
-
-
 @router.get("/", response_model=List[DeviceResponse])
 async def get_devices(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     # Clamp query
@@ -42,9 +33,8 @@ async def get_devices(skip: int = 0, limit: int = 100, db: Session = Depends(get
     # Return all fetched records
     return result.scalars().all()
 
-@router.get("/{requested_id}")
+@router.get("/{requested_id}", response_model=DeviceResponse)
 async def get_specific_device(requested_id: int, db: Session = Depends(get_db)):
-    # Construct the query with pagination
     query = select(Device).where(requested_id == Device.id)
     
     # Execute query
@@ -56,19 +46,21 @@ async def get_specific_device(requested_id: int, db: Session = Depends(get_db)):
     return device
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
-def add_device(device: dict, db: Session = Depends(get_db)):
-    # device_dict = device.model_dump()
+@router.post("/", response_model=DeviceResponse, status_code=status.HTTP_201_CREATED)
+def add_device(payload: DeviceCreate, db: Session = Depends(get_db)):
+    new_device = Device(name=payload.name, location=payload.location)
 
-    # if device.temp:
-    #     pass
-    logger.info("test")
+    try:
+        db.add(new_device)
+        db.commit()
+        db.refresh(new_device)
 
-    # db_device = Device(name=device.name, location=device.location)
-    db_device = Device(**device)
-    db.add(db_device)
-    db.commit()
-    db.refresh(db_device)
+        return new_device
 
-    return {"message": "Device saved successfully", "id": db_device.id}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database write operation failed during data ingestion pipeline."
+        )
 
