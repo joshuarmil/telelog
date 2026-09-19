@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 # from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.db.session import SessionLocal, get_db
-from app.models.device import Device, DeviceResponse
+from app.models.device import Device
+from app.schemas.device import DeviceCreate, DeviceResponse
 import logging
 from typing import List
 
