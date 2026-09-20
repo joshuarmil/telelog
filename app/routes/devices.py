@@ -8,14 +8,7 @@ from app.schemas.device import DeviceCreate, DeviceResponse
 import logging
 from typing import List
 
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-
-logger = logging.getLogger("telemetry_api")
-
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/devices", tags=["Device Management Cluster"])
 
@@ -48,6 +41,8 @@ async def get_specific_device(requested_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=DeviceResponse, status_code=status.HTTP_201_CREATED)
 def add_device(payload: DeviceCreate, db: Session = Depends(get_db)):
+    logger.info(f"Received new device: {payload.name}")
+    
     new_device = Device(name=payload.name, location=payload.location)
 
     try:
@@ -55,10 +50,13 @@ def add_device(payload: DeviceCreate, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(new_device)
 
+        logger.info(f"Successfully persisted Device ID: {new_device.id} for Device: {new_device.name}")
+
         return new_device
 
     except Exception as e:
         db.rollback()
+        logger.error(f"Failed to persist new Device {payload.name}. Error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database write operation failed during data ingestion pipeline."
