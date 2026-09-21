@@ -63,5 +63,12 @@ docker-compose up --build -d
 # Start the API server
 uvicorn app.main:app --reload
 ```
+
+# To run the worker script for simulated processing:
+```bash
+# In a separate console:
+python -m app.workers.worker
+```
+
 The API documentation will be available locally at `http://localhost:8000/docs`.
 
