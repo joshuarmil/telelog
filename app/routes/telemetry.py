@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 # from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.db.session import SessionLocal, get_db
-from app.models.telemetry import TelemetryReading
+from app.models import TelemetryReading
 from app.schemas.telemetry import TelemetryCreate, TelemetryResponse
 import logging
 from typing import List

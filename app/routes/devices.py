@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 # from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.db.session import SessionLocal, get_db
-from app.models.device import Device
+from app.models import Device
 from app.schemas.device import DeviceCreate, DeviceResponse
 import logging
 from typing import List
@@ -42,7 +42,7 @@ async def get_specific_device(requested_id: int, db: Session = Depends(get_db)):
 @router.post("/", response_model=DeviceResponse, status_code=status.HTTP_201_CREATED)
 def add_device(payload: DeviceCreate, db: Session = Depends(get_db)):
     logger.info(f"Received new device: {payload.name}")
-    
+
     new_device = Device(name=payload.name, location=payload.location)
 
     try:
