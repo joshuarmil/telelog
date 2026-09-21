@@ -3,6 +3,7 @@ import logging
 from app.db.session import SessionLocal
 from sqlalchemy import select
 from app.models import TelemetryReading
+from app.services.alert_service import AlertService
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ def process_telemetry(batch_limit: int = 100):
             for reading in readings:
                 logger.info(f"Processing Reading ID: {reading.id} for Device ID: {reading.device_id}")
                 time.sleep(0.05) # simulate latency
+                AlertService.evaluate_reading(reading, db)
                 reading.processed = True
 
             db.commit()
