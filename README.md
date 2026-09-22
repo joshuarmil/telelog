@@ -70,5 +70,11 @@ uvicorn app.main:app --reload
 python -m app.workers.worker
 ```
 
+# To run the telemetry simulations against the worker:
+```bash
+# In a separate console:
+python simulator.py
+```
+
 The API documentation will be available locally at `http://localhost:8000/docs`.
 
