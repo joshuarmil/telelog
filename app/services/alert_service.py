@@ -34,3 +34,27 @@ class AlertService:
                 message=msg
             )
             db.add(battery_alert)
+
+    @staticmethod
+    def get_active_alerts(db: Session):
+        query = select(Alert).where(Alert.resolved == False).order_by(Alert.created_at.desc())
+        return list(db.execute(query).scalars().all())
+
+    @staticmethod
+    def resolve_alert(alert_id: int, db: Session):
+        # Allows operator to clear active incidents
+        try:
+            alert = db.get(Alert, alert_id)
+            if not alert:
+                return None
+
+            alert.resolved = True
+            db.commit()
+            db.refresh(alert)
+
+            logger.info(f'Human operator marked Alert ID {alert_id} as RESOLVED.')
+            return alert
+        
+        except Exception as e:
+            db.rollback()
+            raise

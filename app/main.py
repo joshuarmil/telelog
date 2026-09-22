@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import devices, telemetry
+from app.routes import devices, telemetry, alerts
 from contextlib import asynccontextmanager
 from app.db.base import Base
 from app.db.session import engine
@@ -18,6 +18,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Telelog", lifespan=lifespan)
 app.include_router(devices.router)
 app.include_router(telemetry.router)
+app.include_router(alerts.router)
 
 @app.get("/")
 def read_root():
