@@ -3,12 +3,12 @@
 A high-performance sandbox project designed to master distributed data parsing, full-text search indexing, and cloud infrastructure patterns. This project simulates an enterprise-level product catalog search platform, prioritizing search relevance, low latency, and horizontally scalable service architecture.
 
 ## Project Status & Sprint Roadmap
-- [X] Phase 1: High-Level FastAPI Ingestion Engine & PostgreSQL Core (MVP Complete)
-- [ ] Phase 2: Decoupled Background Worker & Anomaly Alert Pipeline (In Progress)
-- [ ] Phase 3: Elasticsearch Cluster Sync & GCP Cloud Deployment Deployment (Upcoming)
+- [X] Phase 1: High-Level FastAPI Ingestion Engine & PostgreSQL Core (Completed)
+- [X] Phase 2: Decoupled Background Worker & Anomaly Alert Pipeline (Completed)
+- [ ] Phase 3: Elasticsearch Cluster Sync & GCP Cloud Deployment Deployment (In Progress)
 
 ## Key Architectural Features
-- **FastAPI Backend:** Built an asynchronous REST API in Python to orchestrate high-concurrency data transactions.
+- **FastAPI Backend:** Built a REST API in Python to orchestrate high-concurrency data transactions.
 - **Elasticsearch Cluster:** Implemented deep indexing, custom tokenization, and compound filtering algorithms to run sub-50ms full-text and fuzzy search operations.
 - **Service Virtualization:** Developed a background Python worker that mocks high-volume catalog streams to test database ingestion limits.
 - **Containerized DevOps Stack:** Native Docker infrastructure configured for local clustering and deployment pipelines.
@@ -43,12 +43,11 @@ A high-performance sandbox project designed to master distributed data parsing, 
 ## Local Setup & Installation
 Ensure you have Docker and Docker Compose installed locally:
 ```bash
-# Clone the repository
 git clone https://github.com/joshuarmil/telelog.git
 cd telelog
 ```
 
-# Create a `.env` configuration file in the project root directory:
+## Create a `.env` configuration file in the project root directory:
 ```ini
 POSTGRES_USER=user
 POSTGRES_PASSWORD=pass
@@ -57,20 +56,11 @@ DATABASE_URL=postgresql://user:pass@db:5432/telemetry
 ```
 
 ```bash
-# Spin up the containers (FastAPI, Elasticsearch, Redis)
+# Spin up the containers
 docker-compose up --build -d
-
-# Start the API server
-uvicorn app.main:app --reload
 ```
 
-# To run the worker script for simulated processing:
-```bash
-# In a separate console:
-python -m app.workers.worker
-```
-
-# To run the telemetry simulations against the worker:
+## To run the telemetry simulations against the worker:
 ```bash
 # In a separate console:
 python simulator.py
