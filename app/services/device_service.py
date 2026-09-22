@@ -7,23 +7,24 @@ import logging
 logger = logging.getLogger(__name__)
 
 class DeviceService:
-    @staticmethod
-    def get_devices(skip: int, limit: int, db: Session):
+    def __init__(self, db: Session):
+        self.db = db
+
+    def get_devices(self, skip: int, limit: int) -> list(Device):
         # Clamp query
         limit = 100 if limit > 100 or limit < 1 else limit
         
         # Add pagination
         query = select(Device).offset(skip).limit(limit)
         
-        result = db.execute(query)
+        result = self.db.execute(query)
         
         return result.scalars().all()
 
-    @staticmethod
-    def get_device_by_id(device_id: int, db: Session):
+    def get_device_by_id(self, device_id: int):
         query = select(Device).where(requested_id == Device.id)
         
-        result = db.execute(query)
+        result = self.db.execute(query)
         
         device = result.scalar_one_or_none()
         
@@ -32,19 +33,18 @@ class DeviceService:
             
         return device
 
-    @staticmethod
-    def add_device(payload: DeviceCreate, db: Session):
+    def add_device(self, payload: DeviceCreate) -> Device:
         new_device = Device(name=payload.name, location=payload.location)
 
         try:
-            db.add(new_device)
-            db.commit()
-            db.refresh(new_device)
+            self.db.add(new_device)
+            self.db.commit()
+            self.db.refresh(new_device)
 
             logger.info(f"Successfully persisted Device ID: {new_device.id} for Device: {new_device.name}")
 
             return new_device
 
         except Exception as e:
-            db.rollback()
+            self.db.rollback()
             raise

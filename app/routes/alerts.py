@@ -10,14 +10,17 @@ from app.services.alert_service import AlertService
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/alerts", tags=["Alerts"])
 
+def get_alert_service(db: Session = Depends(get_db)):
+    return AlertService(db)
+
 @router.get("/", response_model=List[AlertResponse])
-def get_active_alerts(db: Session = Depends(get_db)):
-    return AlertService.get_active_alerts(db)
+def get_active_alerts(service: AlertService = Depends(get_alert_service)):
+    return service.get_active_alerts()
 
 @router.post("/{alert_id}/resolve", response_model=AlertResponse)
-def resolve_alert(alert_id: int, db: Session = Depends(get_db)):
+def resolve_alert(alert_id: int, service: AlertService = Depends(get_alert_service)):
     try:
-        resolved_alert = AlertService.resolve_alert()
+        resolved_alert = service.resolve_alert()
         if not resolved_alert:
             raise ValueError
         

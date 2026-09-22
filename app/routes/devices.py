@@ -7,17 +7,19 @@ from typing import List
 import logging
 
 logger = logging.getLogger(__name__)
-
 router = APIRouter(prefix="/devices", tags=["Device Management Cluster"])
 
+def get_device_service(db: Session = Depends(get_db)):
+    return DeviceService(db)
+
 @router.get("/", response_model=List[DeviceResponse])
-def get_devices(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return DeviceService.get_devices(skip, limit, db)
+def get_devices(skip: int = 0, limit: int = 100, service: DeviceService = Depends(get_device_service)):
+    return service.get_devices(skip, limit)
 
 @router.get("/{requested_id}", response_model=DeviceResponse)
-def get_specific_device(requested_id: int, db: Session = Depends(get_db)):
+def get_specific_device(requested_id: int, service: DeviceService = Depends(get_device_service)):
     try:
-        return DeviceService.get_device_by_id(requested_id, db)
+        return service.get_device_by_id(requested_id)
     except ValueError as e:
         logger.error(f"Failed to fetch device registry payload. Error: {str(e)}")
         
@@ -28,11 +30,11 @@ def get_specific_device(requested_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=DeviceResponse, status_code=status.HTTP_201_CREATED)
-def add_device(payload: DeviceCreate, db: Session = Depends(get_db)):
+def add_device(payload: DeviceCreate, service: DeviceService = Depends(get_device_service)):
     logger.info(f"Received new device: {payload.name}")
 
     try:
-        return DeviceService.add_device(payload, db)
+        return service.add_device(payload)
     except Exception as e:
         logger.error(f"Failed to persist new Device {payload.name}. Error: {str(e)}")
         raise HTTPException(

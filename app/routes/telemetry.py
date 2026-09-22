@@ -7,18 +7,20 @@ from typing import List
 from app.services.telemetry_service import TelemetryService
 
 logger = logging.getLogger(__name__)
-
 router = APIRouter(prefix="/telemetry", tags=["Telemetry Ingestion Pipeline"])
 
+def get_telemetry_service(db: Session = Depends(get_db)):
+    return TelemetryService(db)
+
 @router.get("/", response_model=List[TelemetryResponse])
-def get_telemetry(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return TelemetryService.get_readings(skip, limit, db)
+def get_telemetry(skip: int = 0, limit: int = 100, service: TelemetryService = Depends(get_telemetry_service)):
+    return service.get_readings(skip, limit)
     
 @router.post("/", response_model=TelemetryResponse, status_code=status.HTTP_201_CREATED)
-def add_telemetry(payload: TelemetryCreate, db: Session = Depends(get_db)):
+def add_telemetry(payload: TelemetryCreate, service: TelemetryService = Depends(get_telemetry_service)):
     logger.info(f"Received ingestion payload from Device ID: {payload.device_id}")
     try:
-        return TelemetryService.create_reading(payload, db)
+        return service.create_reading(payload)
     except Exception as e:
         logger.error(f"Failed to persist telemetry payload for Device {payload.device_id}. Error: {str(e)}")
         raise HTTPException(

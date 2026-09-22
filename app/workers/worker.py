@@ -19,10 +19,12 @@ def process_telemetry(batch_limit: int = 100):
 
             logger.info(f"Retrieved {len(readings)} unprocessed telemetry packets.")
 
+            alert_service = AlertService(db)
+
             for reading in readings:
                 logger.info(f"Processing Reading ID: {reading.id} for Device ID: {reading.device_id}")
                 time.sleep(0.05) # simulate latency
-                AlertService.evaluate_reading(reading, db)
+                alert_service.evaluate_reading(reading)
                 reading.processed = True
 
             db.commit()
