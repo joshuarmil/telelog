@@ -38,10 +38,9 @@ services:
 
   worker:
     build: .
-    container_name: telelog_background_worker
     restart: always
     # 🚀 Run the worker loop as the primary execution process inside this container instance
-    command: python -m app.worker
+    command: python -m app.workers.worker
     volumes:
       - .:/code
     environment:
