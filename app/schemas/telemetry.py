@@ -7,7 +7,6 @@ class TelemetryCreate(BaseModel):
     battery_voltage: float | None
     timestamp: datetime | None
 
-# Pydantic Schema for Response
 class TelemetryResponse(BaseModel):
     id: int
     device_id: int

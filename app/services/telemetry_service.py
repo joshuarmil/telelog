@@ -12,13 +12,11 @@ class TelemetryService:
         # Clamp query
         limit = 100 if limit > 100 or limit < 1 else limit
 
-        # Construct the query with pagination
+        # Add pagination
         query = select(TelemetryReading).offset(skip).limit(limit)
         
-        # Execute query
         result = db.execute(query)
         
-        # Return all fetched records
         return result.scalars().all()
 
     @staticmethod

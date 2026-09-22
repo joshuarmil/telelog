@@ -35,7 +35,7 @@ def process_telemetry(batch_limit: int = 100):
             return False
 
 def main():
-    logger.info("Initializing asynchronous background processing node engine")
+    logger.info("Starting background processing engine")
 
     while True:
         try:

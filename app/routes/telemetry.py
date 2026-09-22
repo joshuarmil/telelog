@@ -23,5 +23,5 @@ def add_telemetry(payload: TelemetryCreate, db: Session = Depends(get_db)):
         logger.error(f"Failed to persist telemetry payload for Device {payload.device_id}. Error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database write operation failed during data ingestion pipeline."
+            detail="Database write operation failed during ingestion pipeline."
         )

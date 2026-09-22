@@ -3,7 +3,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 from datetime import datetime
 
-# SQLAlchemy Table Model
 class Alert(Base):
     __tablename__ = "alerts"
     

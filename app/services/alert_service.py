@@ -52,7 +52,7 @@ class AlertService:
             db.commit()
             db.refresh(alert)
 
-            logger.info(f'Human operator marked Alert ID {alert_id} as RESOLVED.')
+            logger.info(f'Operator marked Alert ID {alert_id} as RESOLVED.')
             return alert
         
         except Exception as e:

@@ -19,11 +19,11 @@ def get_specific_device(requested_id: int, db: Session = Depends(get_db)):
     try:
         return DeviceService.get_device_by_id(requested_id, db)
     except ValueError as e:
-        logger.error(f"Failed to fetch device registry payload. Internal Context: {str(e)}")
+        logger.error(f"Failed to fetch device registry payload. Error: {str(e)}")
         
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Requested hardware device identifier could not be verified."
+            detail="Requested hardware device identifier not found."
         )
 
 
@@ -37,6 +37,6 @@ def add_device(payload: DeviceCreate, db: Session = Depends(get_db)):
         logger.error(f"Failed to persist new Device {payload.name}. Error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database write operation failed during data ingestion pipeline."
+            detail="Database write operation failed during ingestion pipeline."
         )
 

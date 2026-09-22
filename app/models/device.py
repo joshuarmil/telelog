@@ -4,7 +4,6 @@ from app.db.base import Base
 from datetime import datetime
 from typing import List
 
-# SQLAlchemy Table Model
 class Device(Base):
     __tablename__ = "devices"
     
@@ -16,5 +15,4 @@ class Device(Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
-    # Relationship link (not an actual DB column)
     readings: Mapped[List["TelemetryReading"]] = relationship("TelemetryReading", back_populates="device", cascade="all, delete-orphan")

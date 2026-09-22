@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, status
 from app.routes import devices, telemetry, alerts
 from contextlib import asynccontextmanager
 from app.db.base import Base
@@ -20,7 +20,11 @@ app.include_router(devices.router)
 app.include_router(telemetry.router)
 app.include_router(alerts.router)
 
-@app.get("/")
+@app.get("/", status_code=status.HTTP_200_OK)
 def read_root():
-    return {"Hello": "World"}
-
+    return {
+        "status": "healthy",
+        "service": "telelog-telemetry-api",
+        "version": "1.0.0",
+        "documentation": "/docs"
+    }

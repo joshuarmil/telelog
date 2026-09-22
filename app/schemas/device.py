@@ -5,8 +5,6 @@ class DeviceCreate(BaseModel):
     name: str
     location: str | None = None
 
-
-# Pydantic Schema for Response
 class DeviceResponse(BaseModel):
     id: int
     name: str

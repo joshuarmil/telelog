@@ -12,27 +12,23 @@ class DeviceService:
         # Clamp query
         limit = 100 if limit > 100 or limit < 1 else limit
         
-        # Construct the query with pagination
+        # Add pagination
         query = select(Device).offset(skip).limit(limit)
         
-        # Execute query
         result = db.execute(query)
         
-        # Return all fetched records
         return result.scalars().all()
 
     @staticmethod
     def get_device_by_id(device_id: int, db: Session):
         query = select(Device).where(requested_id == Device.id)
         
-        # Execute query
         result = db.execute(query)
         
-        # Fetch all records
         device = result.scalar_one_or_none()
         
         if not device:
-            raise ValueError(f"Device asset index {device_id} non-existent in database.")
+            raise ValueError(f"Device index {device_id} not found in database.")
             
         return device
 

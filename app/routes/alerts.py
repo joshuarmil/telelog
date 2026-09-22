@@ -33,5 +33,5 @@ def resolve_alert(alert_id: int, db: Session = Depends(get_db)):
         logger.error(f"Failed to persist alert resolution for Alert {alert_id}. Error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database write operation failed during data ingestion pipeline."
+            detail="Database write operation failed during ingestion pipeline."
         )

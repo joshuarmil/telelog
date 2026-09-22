@@ -3,7 +3,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 from datetime import datetime
 
-# SQLAlchemy Table Model
 class TelemetryReading(Base):
     __tablename__ = "telemetry"
     
@@ -20,5 +19,4 @@ class TelemetryReading(Base):
     # Worker flag
     processed: Mapped[bool] = mapped_column(default=False)
 
-    # Relationship link (not an actual DB column)
     device: Mapped["Device"] = relationship("Device", back_populates="readings")
