@@ -1,6 +1,6 @@
 # Telelog - Distributed Ingestion Engine
 
-A high-performance sandbox project designed to master distributed data parsing, full-text search indexing, and cloud infrastructure patterns. This project simulates an enterprise-level product catalog search platform, prioritizing search relevance, low latency, and horizontally scalable service architecture.
+A containerized, event-driven data pipeline designed to ingest high-frequency IoT device telemetry, isolate database transaction limits, and scale processing out-of-band across decoupled, concurrent worker nodes.
 
 ## Project Status & Sprint Roadmap
 - [X] Phase 1: High-Level FastAPI Ingestion Engine & PostgreSQL Core (Completed)
@@ -16,29 +16,44 @@ A high-performance sandbox project designed to master distributed data parsing, 
 
 ## Tech Stack & Protocols
 - **Languages:** Python, Bash, JSON
-- **Databases/Search:** Elasticsearch, Redis (In-memory caching layer)
-- **Infrastructure:** Docker, Docker Compose, GCP Compute Engine
-- **Frameworks:** FastAPI, Pydantic, Elastic-transport
+- **Infrastructure:** Docker
+- **Frameworks:** FastAPI, Pydantic
+- **Data Persistence:** PostgreSQL, SQLAlchemy, Alembic
 
-## System Architecture Diagram
-```
-[ Client / Web Browser ] 
-        │  (REST API / JSON)
-        ▼
- [ FastAPI Gateway Service ] 
-        │
-   ┌────┴────────────────────────┐
-   ▼ (Cache Lookup)              ▼ (Search Queries / Bulk Index)
-[ Redis Cache ]         [ Elasticsearch Cluster ]
-                                 ▲
-                                 │ (Simulated Stream Ingestion)
-                        [ Python Mock Data Worker ]
-```
+## Architectural Design Principles
 
-## Engineering Insights & What I Learned
-1. **Optimizing Search Relevance:** I learned how to move past basic database lookups by building customized query clauses in Elasticsearch. I tuned parameters for `multi_match` fields and applied custom string analysis tokenizers to improve typo-tolerance while avoiding heavy index bloating.
-2. **Handling Unreliable Cloud Boundaries:** Building the remote service simulation forced me to design custom retry-logic algorithms using linear backoffs. This guarantees that if data streaming nodes fluctuate or lose network connection, the system self-heals without duplicating log events or dropping payload updates.
-3. **Observability Tracking:** Set up explicit, structured JSON logging frameworks throughout the ingestion nodes, allowing easy auditing of application performance metrics and mapping directly to enterprise observability patterns.
+The core objective of this architecture is to decouple network-facing ingestion from database-heavy business logic evaluations, ensuring minimal response latency and bulletproof system scaling.
+
+```
+                  ┌───────────────────────────────┐
+                  │   Incoming Hardware Sensors   │
+                  └───────────────┬───────────────┘
+                                  │  (HTTP POST /telemetry)
+                                  ▼
+                    ┌───────────────────────────┐
+                    │    FastAPI Web Gateway    │
+                    └─────────────┬─────────────┘
+                                  │  (Insert row with processed=False)
+                                  ▼
+                    ┌───────────────────────────┐
+                    │    PostgreSQL Database    │
+                    └─────────────┬─────────────┘
+                                  │
+          ┌───────────────────────┼───────────────────────┐
+          │ (skip_locked=True)    │ (skip_locked=True)    │ (skip_locked=True)
+          ▼                       ▼                       ▼
+┌──────────────────┐    ┌──────────────────┐    ┌──────────────────┐
+│ Worker Node 1    │    │ Worker Node 2    │    │ Worker Node 3    │
+└──────────────────┘    └──────────────────┘    └──────────────────┘
+```
+### 1. Decoupled Ingestion & Processing
+Instead of running expensive threshold logic or writing alert logs inside the HTTP request thread, the web API validates payloads via Pydantic schemas, commits the raw metrics with a `processed = False` state index, and immediately releases the network client with an HTTP 201 status code.
+
+### 2. Transaction Boundary Isolation
+Database sessions are managed contextually based on execution environments. Routing leverages FastAPI's framework Dependency Injection to safely bind connection lifecycles to individual HTTP requests. Standalone background worker loops use native context managers (`with SessionLocal() as db:`) to enforce strict transaction limits, isolating operational rollbacks completely from the network.
+
+### 3. Horizontal Scale via Row Locking
+To support high-throughput load distributions without race conditions, the background worker leverages PostgreSQL row-level locks via `.with_for_update(skip_locked=True)`. When scaled horizontally across multiple container instances, worker nodes drain the transaction queue concurrently. Each worker locks and processes its own discrete batch, while sibling containers bypass those locked records to claim the next available segments without deadlocking or duplicating alert writes.
 
 ## Local Setup & Installation
 Ensure you have Docker and Docker Compose installed locally:
@@ -47,7 +62,7 @@ git clone https://github.com/joshuarmil/telelog.git
 cd telelog
 ```
 
-## Create a `.env` configuration file in the project root directory:
+### 1. Create a `.env` configuration file in the project root directory:
 ```ini
 POSTGRES_USER=user
 POSTGRES_PASSWORD=pass
@@ -55,16 +70,30 @@ POSTGRES_DB=telemetry
 DATABASE_URL=postgresql://user:pass@db:5432/telemetry
 ```
 
+### 2. Spin up the multi-container cluster
+Build the cached Python container environments and launch the persistent database, web gateway, and scaled background processing worker nodes inside a private bridge network:
+
 ```bash
-# Spin up the containers
-docker-compose up --build -d
+docker-compose up -d --build --scale worker=3
 ```
 
-## To run the telemetry simulations against the worker:
+### 3. Inject simulated loads
+In a separate console, run the test injection harness. This script provisions a fresh mock hardware asset and fires a series of realistic telemetry patterns, including intentional temperature and voltage warnings:
+
 ```bash
-# In a separate console:
 python simulator.py
+```
+
+### 4. Verify System Alerts Via API Gateway
+Confirm the background processing engines caught the thresholds and recorded persistent logs by querying the read-only alert monitoring endpoint:
+
+```bash
+curl http://localhost:8000/alerts/
 ```
 
 The API documentation will be available locally at `http://localhost:8000/docs`.
 
+## Performance-Tuning Talking Points
+
+- **Indexed Boolean Selectivity:** The `TelemetryReading.processed` column utilizes a database index. While indexing booleans is traditionally inefficient, it serves as a highly selective "needle in a haystack" lookup model here. As millions of processed historical records accumulate, the query planner bypasses them entirely, targeting only the small handful of active, un-drained data rows in under a millisecond.
+- **Batch Sizing Backoff:** Workers run an adaptive loop. If a query yields rows, the worker processes them and checks in again immediately. If a query returns empty, the worker implements a brief sleep duration backoff to conserve database CPU resources.
